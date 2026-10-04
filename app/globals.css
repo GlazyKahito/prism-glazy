@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #050508;
+  --color-ink-900: #08080d;
+  --color-ink-850: #0c0c13;
+  --color-ink-800: #11111a;
+  --color-ink-700: #191924;
+  --color-ink-600: #252533;
+  --color-snow: #f5f5f8;
+  --color-mist: #c3c3d1;
+  --color-fog: #8e8ea2;
+  --color-iris: #aea4ff;
+  --color-iris-deep: #7d6cff;
+  --color-sp-red: #ff6b81;
+  --color-sp-orange: #ffa45c;
+  --color-sp-yellow: #ffdd6e;
+  --color-sp-green: #6ef2b0;
+  --color-sp-cyan: #5ad7ff;
+  --color-sp-blue: #7a8dff;
+  --color-sp-violet: #b98cff;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+
+  --animate-caret: caret 1s steps(1) infinite;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+  --animate-orbit: orbit 36s linear infinite;
+  --animate-orbit-reverse: orbit 36s linear infinite reverse;
+  --animate-pulse-dot: pulse-dot 2s ease-out infinite;
+}
+
+@theme inline {
+  --font-display: var(--font-funnel-display), ui-sans-serif, system-ui,
+    sans-serif;
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono: var(--font-fragment-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+}
+
+@keyframes caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgb(110 242 176 / 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgb(110 242 176 / 0);
+  }
+}
+
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes glow-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+html {
+  color-scheme: dark;
+  background: var(--color-ink-950);
+  scroll-padding-top: 6rem;
+  scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  background: var(--color-ink-950);
+  color: var(--color-snow);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection {
+  background: rgb(174 164 255 / 0.35);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-iris);
+  outline-offset: 3px;
+}
+
+/* Film grain over the whole page, very faint. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ------------------------------------------------------------------ */
+/* Opening sequence gate (decided before first paint in app/layout)    */
+/* ------------------------------------------------------------------ */
+
+.intro-layer {
+  display: none;
+}
+
+html[data-intro="play"] .intro-layer,
+html[data-intro="exit"] .intro-layer {
+  display: block;
+}
+
+html[data-intro="play"] {
+  overflow: hidden;
+}
+
+/* While the intro plays, the hero stage (the real 3D prism) sits above the
+   intro backdrop, so the beam lands on the same object the hero shows. */
+html[data-intro="play"] .hero-stage,
+html[data-intro="exit"] .hero-stage {
+  z-index: 70;
+}
+
+html[data-intro="play"] .hero-poster {
+  opacity: 0 !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Utilities                                                           */
+/* ------------------------------------------------------------------ */
+
+@utility text-spectrum {
+  background-image: linear-gradient(
+    100deg,
+    #ffb3c0 0%,
+    #ffc999 18%,
+    #ffe9a6 34%,
+    #b5f5d2 52%,
+    #a9e6ff 70%,
+    #c3b8ff 86%,
+    #e2c4ff 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-spectrum {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-sp-red),
+    var(--color-sp-orange),
+    var(--color-sp-yellow),
+    var(--color-sp-green),
+    var(--color-sp-cyan),
+    var(--color-sp-blue),
+    var(--color-sp-violet)
+  );
+}
+
+@utility glass {
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.06),
+    rgb(255 255 255 / 0.02)
+  );
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+    0 20px 60px -30px rgb(0 0 0 / 0.8);
+}
+
+@utility shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.35) 0%,
+    rgb(255 255 255 / 0.9) 50%,
+    rgb(255 255 255 / 0.35) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: var(--animate-shimmer);
+}
+
+@utility mask-fade-x {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+}
+
+/* Spectral hairline border for highlighted surfaces. */
+@utility ring-spectrum {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      140deg,
+      rgb(255 107 129 / 0.9),
+      rgb(255 221 110 / 0.7),
+      rgb(110 242 176 / 0.6),
+      rgb(90 215 255 / 0.8),
+      rgb(185 140 255 / 0.95)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* Pause decorative loops while their section is off screen. */
+[data-paused="true"] * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

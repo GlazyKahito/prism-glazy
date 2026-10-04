@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Environment,
@@ -442,6 +442,72 @@ function ReadySignal({ onReady }: { onReady: () => void }) {
   return null;
 }
 
+/** Every material whose shader is the transmission glass (drei swaps its side per pass). */
+function glassMaterials(scene: THREE.Object3D) {
+  const found = new Set<THREE.Material>();
+  scene.traverse((object) => {
+    const material = (object as THREE.Mesh).material;
+    if (material && !Array.isArray(material) && "_transmission" in ((material as THREE.ShaderMaterial).uniforms ?? {})) {
+      found.add(material);
+    }
+  });
+  return [...found];
+}
+
+/**
+ * Compiles every shader variant the scene needs before the first frame, off the
+ * main thread. The glass shader is large: compiled on first draw it can freeze
+ * the page for seconds (notably on Windows), stalling the opening sequence.
+ * The glass is drawn twice: front faces to the screen, and back faces into a
+ * linear, untone-mapped buffer, so both variants are compiled.
+ */
+function Precompile({ onDone }: { onDone: () => void }) {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+
+  useEffect(() => {
+    let alive = true;
+    const done = () => {
+      if (alive) onDone();
+    };
+
+    // Without parallel compilation there is nothing to gain: draw straight away.
+    if (!gl.extensions.has("KHR_parallel_shader_compile")) {
+      done();
+      return;
+    }
+
+    const run = async () => {
+      await gl.compileAsync(scene, camera);
+      const glass = glassMaterials(scene);
+      const sides = glass.map((material) => material.side);
+      const target = new THREE.WebGLRenderTarget(1, 1);
+      const previous = gl.getRenderTarget();
+      gl.setRenderTarget(target);
+      glass.forEach((material) => {
+        material.side = THREE.BackSide;
+        material.needsUpdate = true;
+      });
+      const offscreen = gl.compileAsync(scene, camera);
+      glass.forEach((material, i) => {
+        material.side = sides[i];
+        material.needsUpdate = true;
+      });
+      gl.setRenderTarget(previous);
+      await offscreen;
+      target.dispose();
+    };
+    run().then(done, done);
+
+    return () => {
+      alive = false;
+    };
+  }, [gl, scene, camera, onDone]);
+
+  return null;
+}
+
 /** With continuous rendering off, nudge a handful of frames so the still is complete. */
 function SettleFrames({ enabled }: { enabled: boolean }) {
   const invalidate = useThree((state) => state.invalidate);
@@ -460,11 +526,15 @@ function SettleFrames({ enabled }: { enabled: boolean }) {
 
 export function PrismScene({ animate, active, onReady }: PrismSceneProps) {
   const [maxDpr, setMaxDpr] = useState(1.75);
+  // Nothing is drawn until the shaders are ready, so no frame waits on a compile.
+  const [compiled, setCompiled] = useState(false);
+  const onCompiled = useCallback(() => setCompiled(true), []);
+  const running = compiled && active;
 
   return (
     <Canvas
       dpr={[1, maxDpr]}
-      frameloop={active ? (animate ? "always" : "demand") : "never"}
+      frameloop={running ? (animate ? "always" : "demand") : "never"}
       camera={{ position: [0, 0, 8], fov: 35, near: 0.1, far: 40 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
@@ -473,8 +543,9 @@ export function PrismScene({ animate, active, onReady }: PrismSceneProps) {
       <PerformanceMonitor onDecline={() => setMaxDpr(1)} />
       <Studio />
       <Layout animate={animate} />
+      <Precompile onDone={onCompiled} />
       <ReadySignal onReady={onReady} />
-      <SettleFrames enabled={active && !animate} />
+      <SettleFrames enabled={running && !animate} />
     </Canvas>
   );
 }

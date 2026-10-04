@@ -82,16 +82,6 @@
   }
 }
 
-@keyframes glow-breathe {
-  0%,
-  100% {
-    opacity: 0.75;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 /* ------------------------------------------------------------------ */
 /* Base                                                                */
 /* ------------------------------------------------------------------ */
@@ -226,16 +216,6 @@ html[data-intro="play"] .hero-poster {
   background-clip: text;
   color: transparent;
   animation: var(--animate-shimmer);
-}
-
-@utility mask-fade-x {
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 12%,
-    #000 88%,
-    transparent
-  );
 }
 
 /* Spectral hairline border for highlighted surfaces. */

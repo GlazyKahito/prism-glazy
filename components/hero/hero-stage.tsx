@@ -4,7 +4,7 @@ import { Component, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useInView } from "motion/react";
 import { cn } from "@/lib/cn";
-import { downgradeHeroMode, useHeroMode } from "@/lib/hero-mode";
+import { downgradeHeroMode, getHeroMode, useHeroMode } from "@/lib/hero-mode";
 import { markLoaded } from "@/lib/intro";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 import { PrismPoster } from "./prism-poster";
@@ -17,6 +17,12 @@ const PrismScene = dynamic(
     }),
   { ssr: false },
 );
+
+// Start downloading the 3D chunk as soon as this module runs on a device that
+// will show it, instead of waiting for hydration to mount the scene.
+if (typeof window !== "undefined" && getHeroMode() === "webgl") {
+  void import("./prism-scene");
+}
 
 class SceneBoundary extends Component<
   { onError: () => void; children: React.ReactNode },

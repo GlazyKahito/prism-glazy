@@ -11,13 +11,3 @@ export const fadeUp: Variants = {
     transition: { duration: 0.9, ease: easeOutExpo },
   },
 };
-
-export const fadeUpSoft: Variants = {
-  hidden: { opacity: 0, y: 18, filter: "blur(8px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 1, ease: easeOutExpo },
-  },
-};
